@@ -1,30 +1,20 @@
 import os
 
 from openai import OpenAI
-from pydantic import BaseModel
 
 from dotenv import load_dotenv
 from project.prompts import gpt_4_prompt
+from project.models import RefinePromptResponse
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-class RefinePromptResponse(BaseModel):
-    """
-    Returns the original and refined prompt alongside any pertinent metadata.
-    """
-
-    original_prompt: str
-    refined_prompt: str
-    refinement_status: str
-
-
 async def refine_prompt(prompt: str) -> RefinePromptResponse:
     """
     Accepts a language model prompt from the user and returns a refined version. Utilizes the OpenAI API to process
-    and refine the input prompt via GPT-4 with specific instructions for improvement.
+    and refine the input prompt via GPT-4 with specific instructions for improvement. This is Used with GPT-4
 
     Args:
         prompt (str): The raw language model prompt input by the user for refinement.

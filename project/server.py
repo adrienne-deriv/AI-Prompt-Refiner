@@ -64,3 +64,28 @@ async def refine_prompt_claude(
             status_code=500,
             media_type="application/json",
         )
+
+
+@app.post(
+    "/refine-gemini-prompt", response_model=RefinePromptResponse
+)
+async def refine_prompt_claude(
+        service: Annotated[PromptRefinerService, Depends()],
+        prompt: str,
+) -> Union[Response, RefinePromptResponse]:
+    """
+    Accepts a language model prompt from the user and returns a refined version.
+    """
+    try:
+        res = await service.refine_prompt_gemini(prompt=prompt)
+        logging.info(f"Response: {res}")
+        return res
+    except Exception as e:
+        logger.exception("Error processing request")
+        res = dict()
+        res["error"] = str(e)
+        return Response(
+            content=jsonable_encoder(res),
+            status_code=500,
+            media_type="application/json",
+        )

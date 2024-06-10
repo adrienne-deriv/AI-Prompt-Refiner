@@ -5,7 +5,7 @@ from typing import Optional, List
 from openai import AsyncOpenAI
 
 from dotenv import load_dotenv
-from project.prompts import gpt_4_prompt, claude_3_prompt
+from project.prompts import gpt_4_prompt, claude_3_prompt, gemini_prompt
 from project.models import RefinePromptResponse
 
 load_dotenv()
@@ -88,6 +88,46 @@ class PromptRefinerService:
                 temperature=0.5,
                 max_tokens=2048
             )
+            refined_prompt = (
+                response.choices[0].message.content.strip() if response.choices else ""
+            )
+            return RefinePromptResponse(
+                original_prompt=prompt,
+                refined_prompt=refined_prompt,
+                refinement_status="COMPLETED" if refined_prompt else "FAILED",
+            )
+        except Exception as e:
+            return RefinePromptResponse(
+                original_prompt=prompt,
+                refined_prompt="",
+                refinement_status=f"FAILED due to an internal error: {e}",
+            )
+
+    async def refine_prompt_gemini(self, prompt: str) -> RefinePromptResponse:
+        """
+        Accepts a language model prompt from the user and returns a refined version. Utilizes the OpenAI API to precess
+        and refine the input prompt via GPT-4o with specific instructions for improvements. This prompt is to be used
+        to prompt Gemini Models
+
+        Args:
+            :param prompt: (str): The raw language model prompt input by the user for refinement.
+
+        Returns:
+            RefinePromptResponse: Returns the original and refined prompt alongside any pertinent metadata, including
+            the success or failure status of the refinement process.
+
+        """
+        try:
+            response = await self.openai.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": f"{gemini_prompt}"},
+                    {"role": "system", "content": f"User's message: {prompt}"}
+                ],
+                temperature=0.5,
+                max_tokens=2048
+            )
+
             refined_prompt = (
                 response.choices[0].message.content.strip() if response.choices else ""
             )
